@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso | Papeleria Las Canchas</title>
+  <style>
+    /* Tu CSS (exactamente como lo tenias) */
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", Arial, sans-serif; }
+    body { background: linear-gradient(135deg, #0059ff, #f4b400); height: 100vh; display: flex; justify-content: center; align-items: center; }
+    .login-box { background-color: white; width: 380px; padding: 40px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); text-align: center; }
+    .login-box h1 { color: #002147; margin-bottom: 5px; font-size: 2em; }
+    .login-box h2 { color: #f4b400; margin-bottom: 30px; font-size: 1.2em; font-weight: 600; }
+    .login-box input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc; outline: none; font-size: 15px; }
+    .login-box button { width: 100%; padding: 12px; margin-top: 15px; border: none; border-radius: 8px; background-color: #0059ff; color: white; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
+    .login-box button:hover { background-color: #0041c4; }
+    .error { color: red; font-size: 14px; margin-top: 10px; display: none; }
+    
+    /* Nuevos estilos para el toggle */
+    .toggle-link {
+        font-size: 14px;
+        color: #555;
+        margin-top: 20px;
+        cursor: pointer;
+    }
+    .toggle-link a {
+        color: #0059ff;
+        font-weight: bold;
+        text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h1 id="formTitulo">PAPELERIA</h1>
+    <h2>LAS CANCHAS</h2>
+    <form id="authForm">
+      <input type="text" id="usuario" placeholder="Usuario" required>
+      <input type="password" id="password" placeholder="Contrasena" required>
+      
+      <input type="password" id="confirm_password" placeholder="Confirmar Contrasena" style="display: none;">
+      
+      <button type="submit" id="submitButton">Iniciar Sesion</button>
+      <p class="error" id="errorMsg">Usuario o contrasena incorrectos</p>
+    </form>
+    
+    <p class="toggle-link" id="toggleLinkContainer">
+      No tienes cuenta? <a href="#" id="toggleLink">Registrate</a>
+    </p>
+  </div>
+
+  <script>
+    const authForm = document.getElementById('authForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const usuarioInput = document.getElementById('usuario');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const submitButton = document.getElementById('submitButton');
+    const toggleLink = document.getElementById('toggleLink');
+    const toggleLinkContainer = document.getElementById('toggleLinkContainer');
+    
+    let isRegisterMode = false; // Estado actual del formulario
+
+    // Funcion para alternar el modo
+    function toggleMode() {
+        isRegisterMode = !isRegisterMode; // Invertir el estado
+        
+        if (isRegisterMode) {
+            // Modo Registro
+            submitButton.textContent = "Registrarse";
+            confirmPasswordInput.style.display = "block";
+            confirmPasswordInput.required = true;
+            toggleLinkContainer.innerHTML = 'Ya tienes cuenta? <a href="#" id="toggleLink">Inicia Sesion</a>';
+        } else {
+            // Modo Login
+            submitButton.textContent = "Iniciar Sesion";
+            confirmPasswordInput.style.display = "none";
+            confirmPasswordInput.required = false;
+            toggleLinkContainer.innerHTML = 'No tienes cuenta? <a href="#" id="toggleLink">Registrate</a>';
+        }
+        
+        // Volver a asignar el listener al nuevo enlace
+        document.getElementById('toggleLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleMode();
+        });
+    }
+    
+    // Asignar el primer listener
+    toggleLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleMode();
+    });
+
+    // Manejar el envio del formulario
+    authForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      errorMsg.style.display = "none"; // Ocultar error previo
+      
+      const usuario = usuarioInput.value;
+      const password = passwordInput.value;
+      
+      let action = '';
+      let bodyData = {};
+
+      if (isRegisterMode) {
+        // --- Logica de Registro ---
+        action = 'register';
+        const confirmPassword = confirmPasswordInput.value;
+        
+        if (password !== confirmPassword) {
+            errorMsg.textContent = "Las contrasenas no coinciden.";
+            errorMsg.style.display = "block";
+            return;
+        }
+        
+        bodyData = { action, usuario, password };
+        
+      } else {
+        // --- Logica de Login ---
+        action = 'login';
+        bodyData = { action, usuario, password };
+      }
+
+      // Enviar datos a login.php
+      try {
+        const response = await fetch('login.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bodyData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            if (isRegisterMode) {
+                // Registro exitoso, pedir que inicie sesion
+                alert("Registro exitoso. Ahora puedes iniciar sesion.");
+                toggleMode(); // Volver al modo login
+                authForm.reset();
+            } else {
+                // Login exitoso
+                window.location.href = "proyecto.html"; // Redirigir a la pagina principal
+            }
+        } else {
+          // Mostrar error del servidor
+          errorMsg.textContent = data.message || "Ocurrio un error.";
+          errorMsg.style.display = "block";
+        }
+      } catch (err) {
+        console.error("Error en el fetch:", err);
+        errorMsg.textContent = "Error al conectar con el servidor.";
+        errorMsg.style.display = "block";
+      }
+    });
+
+
+    
+  </script>
+</body>
+</html>

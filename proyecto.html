@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Papeleria Las Canchas (v4.2 - Cache Corregido)</title>
+
+    <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", Arial, sans-serif; }
+    body { background-color: #f7f9fb; color: #0a0a0a; }
+
+    /* HEADER y Navegación */
+    header { background-color: white; padding: 20px 40px; text-align: center; border-bottom: 2px solid #eee; position: relative; }
+    
+    header h1 { color: #002147; font-size: 2.2em; margin-bottom: 5px; }
+    header h2 { color: #f4b400; font-size: 1.3em; font-weight: 600; }
+    .logout { position: absolute; right: 30px; top: 30px; color: #002147; font-weight: bold; cursor: pointer; text-decoration: none; }
+    
+
+    nav { display: flex; justify-content: center; gap: 30px; background: white; border-bottom: 2px solid #eee; }
+    nav a { text-decoration: none; color: #002147; font-weight: 500; padding: 10px; border-bottom: 3px solid transparent; transition: 0.3s; cursor: pointer; }
+    nav a.active, nav a:hover { border-bottom: 3px solid #f4b400; color: #000; }
+
+    /* CONTENEDOR PRINCIPAL */
+    .container { max-width: 900px; margin: 30px auto; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 25px; }
+    .hidden { display: none; }
+
+    /* BARRA DE BÚSQUEDA */
+    .search-bar { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
+    .search-bar input { width: 70%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
+    .search-bar button { padding: 10px 15px; border: none; border-radius: 8px; background-color: #0059ff; color: white; cursor: pointer; font-weight: bold; }
+    .search-bar button:hover { background-color: #0041c4; }
+
+    /* LISTA DE PRODUCTOS (Inicio) */
+    .product {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transition: 0.3s;
+    }
+    .product:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    }
+    .product-text {
+        flex: 1;
+        padding-right: 20px;
+    }
+    .product-text h3 {
+        color: #002147;
+        font-size: 1.2em;
+        margin-bottom: 6px;
+    }
+    .product-text p {
+        color: #555;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    .product-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+        min-width: 140px;
+    }
+    .product-actions .price {
+        font-weight: bold;
+        color: #0059ff;
+        font-size: 1em;
+        margin-bottom: 8px;
+        text-align: right;
+    }
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .action-btn {
+        border: none;
+        padding: 6px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: bold;
+        text-align: center;
+        transition: 0.3s;
+    }
+    .btn-entrada { background: #4CAF50; color: white; }
+    .btn-salida { background: #f4b400; color: white; }
+    .btn-eliminar { background: #E53935; color: white; }
+    .btn-editar { background: #0059ff; color: white; }
+    .btn-historial { background: #555; color: white; }
+    .action-btn:hover { opacity: 0.9; transform: scale(1.02); }
+
+
+        /* FORMULARIOS (Nuevo Producto / Proveedores) */
+    .form-container { text-align: center; }
+    form { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+    form input, form select, form textarea { width: 70%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; resize: none; font-size: 15px; }
+    .form-buttons { display: flex; gap: 15px; margin-top: 10px; }
+    .form-buttons button { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
+    .save { background-color: #0059ff; color: white; }
+    .cancel { background-color: #555; color: white; }
+
+    /* CATÁLOGO */
+    .catalogo-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+    .card { width: 220px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 15px; text-align: center; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between;}
+    .card:hover { transform: scale(1.03); }
+    .card h4 { color: #002147; margin-bottom: 5px; }
+    .card p { font-size: 14px; color: #555; }
+    .card .price { font-weight: bold; color: #0059ff; margin-top: 10px; }
+
+    /* REPORTES y PROVEEDORES */
+    .report-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 25px; }
+    #report-results, #proveedorListContainer { margin-top: 20px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background-color: #f2f2f2; color: #002147; }
+    #proveedorForm { display: flex; gap: 10px; justify-content: center; }
+    #proveedorList { list-style: none; padding-left: 0; max-width: 500px; margin: 20px auto; }
+    #proveedorList li { background: #f9f9f9; border: 1px solid #eee; padding: 10px; margin-bottom: 5px; border-radius: 6px; }
+
+    /* MODAL (Historial) */
+    .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+    .modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 700px; border-radius: 10px; }
+    .modal-close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+    .modal-close:hover { color: #000; }
+    #historialModalContent { max-height: 400px; overflow-y: auto; margin-top: 20px; }
+</style>
+
+</head>
+<body>
+    <header>
+        <h1>PAPELERIA</h1>
+        <h2>LAS CANCHAS</h2>
+        <a href="logout.php" class="logout" title="Cerrar Sesion">⎋ Log out</a>
+    </header>
+
+        <div id="lowStockAlert" 
+            style="display:none; background:#ffdddd; color:#a30000; padding:15px; margin:10px auto; 
+            max-width:900px; border-left:6px solid #ff0000; font-size:16px; border-radius:6px;">
+        </div>
+
+        <nav>
+        <a class="active" onclick="showSection('inicio', this)">Inicio</a>
+        <a onclick="showSection('catalogo', this)">Catalogo</a>
+        <a onclick="showSection('nuevo', this)">Nuevo Producto</a>
+        <a onclick="showSection('proveedores', this)">Proveedores</a>
+        <a onclick="showSection('reportes', this)">Reportes</a>
+    </nav>
+
+    <div class="container" id="inicio">
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Buscar producto...">
+            <button onclick="buscarProducto()">Buscar</button>
+            <button onclick="limpiarBusqueda()" style="background:#777;">Limpiar</button>
+        </div>
+        <div id="productList"></div>
+    </div>
+
+    <div class="container hidden" id="nuevo">
+        <div class="form-container">
+            <h3 id="formNuevoTitulo">Registrar Nuevo Producto</h3>
+            <form id="formNuevoProducto">
+                <input type="text" id="nombre_n" placeholder="Nombre del producto" required>
+                <input type="text" id="marca_n" placeholder="Marca">
+                <textarea id="descripcion_n" placeholder="Descripcion del producto"></textarea>
+                <input type="number" id="precio_n" placeholder="Precio compra" min="0" step="0.01" required>
+                <input type="number" id="precio_venta_n" placeholder="Precio de venta" min="0" step="0.01" required>
+                <input type="text" id="categoria_n" placeholder="Categoria">
+                <input type="number" id="stock_n" placeholder="Cantidad a agregar (Stock inicial)" min="0" required>
+                <input type="text" id="ubicacion_n" placeholder="Ubicación del producto">
+                <select id="proveedor_n" required>
+                    <option value="0">-- Seleccionar Proveedor --</option>
+                </select>
+                <div class="form-buttons">
+                    <button type="submit" class="save">Guardar Producto</button>
+                    <button type="button" class="cancel" onclick="showSection('inicio', null)">Cancelar</button>
+                </div>
+            </form>
+        </div>        
+    </div>
+
+    <div class="container hidden" id="edicion">
+        <div class="form-container">
+            <h3 id="formEdicionTitulo">Editar Producto</h3>
+            <form id="formEdicionProducto">
+                <input type="hidden" id="editProductId">
+                <input type="text" id="nombre" placeholder="Nombre del producto" required>
+                <input type="text" id="marca" placeholder="Marca">
+                <textarea id="descripcion" placeholder="Descripcion del producto"></textarea>
+                <input type="number" id="precio" placeholder="Precio compra" min="0" step="0.01" required>
+                <input type="number" id="precio_venta" placeholder="Precio de venta" min="0" step="0.01" required>
+                <input type="text" id="categoria" placeholder="Categoria">
+                <input type="text" id="ubicacion" placeholder="Ubicación del producto">
+                <select id="proveedor" required>
+                    <option value="0">-- Seleccionar Proveedor --</option>
+                </select>
+                <div class="form-buttons">
+                    <button type="submit" class="save">Guardar Cambios</button>
+                    <button type="button" class="cancel" onclick="showSection('inicio', null)">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+      <div class="container hidden" id="catalogo">
+        <h3 style="text-align:center; margin-bottom:20px;">Catalogo General</h3>
+        <div class="catalogo-grid" id="catalogoGrid"></div>
+    </div>
+
+    <div class="container hidden" id="proveedores">
+        <div class="form-container">
+            <h3>Registrar Nuevo Proveedor</h3>
+            <form id="formProveedor">
+                <input type="text" id="nombre_proveedor" placeholder="Nombre del proveedor" required style="width: 50%;">
+                <button type="submit" class="save">Guardar Proveedor</button>
+            </form>
+        </div>
+        <hr style="margin: 25px 0;">
+        <div id="proveedorListContainer">
+            <h3 style="text-align:center; margin-bottom: 15px;">Proveedores Existentes</h3>
+            <ul id="proveedorList"></ul>
+        </div>
+    </div>
+
+    <div class="container hidden" id="reportes">
+        <h3 style="text-align:center; margin-bottom:20px;">Modulo de Reportes</h3>
+        <div class="report-buttons">
+            <button class="action-btn btn-editar" onclick="getReporteStockBajo()">Reporte de Stock Bajo</button>
+            <button class="action-btn btn-editar" onclick="getReporteValorTotal()">Reporte de Valor Total</button>
+            <button class="action-btn btn-editar" onclick="getReportePorCategoria()">Reporte por Categoria</button>
+            
+
+        </div>
+        <div id="report-results"></div>
+    </div>
+
+    <div id="historialModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeHistorialModal()">×</span>
+            <h3 id="historialModalTitulo">Historial de Movimientos</h3>
+            <div id="historialModalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Referencias a los formularios
+        const formNuevo = document.getElementById("formNuevoProducto");
+        const formEdicion = document.getElementById("formEdicionProducto");
+
+        const productList = document.getElementById("productList");
+        const searchInput = document.getElementById("searchInput");
+
+        // Define la ruta a tu API de backend (debe ser 'api.php')
+        const API_URL = "api.php";
+
+        let inventarioCache = [];
+        let proveedorCache = [];
+
+        // Comprueba productos con stock bajo y muestra una alerta visible
+        function checkLowStock(productos) {
+            const alerta = document.getElementById("lowStockAlert");
+
+            const bajos = productos.filter(p => p.stock <= 10);
+
+            if (bajos.length > 0) {
+                let lista = bajos
+                    .map(p => `<b>${p.nombre}</b> (Stock: ${p.stock})`)
+                    .join("<br>");
+
+                alerta.innerHTML = `
+                    ⚠ Productos con stock bajo:<br>
+                    ${lista}
+                `;
+                alerta.style.display = "block";
+            } else {
+                alerta.style.display = "none";
+            }
+        }
+
+        // --- Funciones de Base de Datos (API) ---
+
+        // Función principal para obtener datos y evitar la cache
+        async function getDatabase() {
+            try {
+                console.log("Forzando recarga de productos..."); // Para depuracion
+
+                // Se agrega un parametro de tiempo unico para EVITAR LA CACHE
+                const cacheBuster = "_t=" + new Date().getTime();
+                const response = await fetch(`${API_URL}?${cacheBuster}`);
+
+                if (!response.ok) throw new Error("No se pudo cargar la base de datos");
+
+                const productos = await response.json();
+                if (productos.error) {
+                    if (productos.error === 'No autorizado') {
+                        alert("Tu sesion ha expirado. Por favor, inicia sesion de nuevo.");
+                        window.location.href = "login.html";
+                    }
+                    throw new Error(productos.error);
+                }
+
+                inventarioCache = productos;
+                // Actualizar alerta de stock bajo después de cargar los productos
+                try { checkLowStock(productos); } catch (e) { console.error('checkLowStock error', e); }
+                return productos;
+            } catch (err) {
+                console.error(err);
+                productList.innerHTML = `<p style='text-align:center; color:red;'>Error al conectar con el servidor: ${err.message}</p>`;
+                return [];
+            }
+        }
+
+        // Función para enviar datos al API (POST)
+        async function postAPI(data) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error(`Error del servidor (POST): ${response.status} ${response.statusText}`);
+
+                const result = await response.json();
+                if (result.error) {
+                    if (result.error === 'No autorizado') {
+                        alert("Tu sesion ha expirado. Por favor, inicia sesion de nuevo.");
+                        window.location.href = "login.html";
+                    }
+                    throw new Error(result.error);
+                }
+                return result;
+            } catch (err) {
+                alert("Error: " + err.message);
+                console.error(err);
+                return null;
+            }
+        }
+
+        // Función para obtener datos del API (GET)
+        async function getAPI(action, params = {}) {
+            try {
+                const url = new URL(API_URL, window.location.href);
+                url.searchParams.set('action', action);
+                for (const key in params) {
+                    url.searchParams.set(key, params[key]);
+                }
+
+                // Agregar cache-buster a todas las llamadas GET de la API
+                url.searchParams.set('_t', new Date().getTime());
+
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`Error del servidor (GET): ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+
+                if (result.error) {
+                    if (result.error === 'No autorizado') {
+                        alert("Tu sesion ha expirado. Por favor, inicia sesion de nuevo.");
+                        window.location.href = "login.html";
+                    }
+                    throw new Error(result.error);
+                }
+                return result;
+            } catch (err) {
+                console.error("Error en getAPI:", err.message);
+                alert("Error: " + err.message);
+                return null;
+            }
+        }
+
+        // --- Funciones de Renderizado ---
+
+        // Crea la lista de productos en la sección "Inicio"
+        function renderProductList(productos) {
+            productList.innerHTML = "";
+            if (!productos || productos.length === 0) {
+                productList.innerHTML = "<p style='text-align:center; color:#777;'>No se encontraron productos.</p>";
+            }
+
+            productos.forEach(prod => {
+                const productElement = document.createElement("div");
+                productElement.classList.add("product");
+                productElement.dataset.id = prod.id;
+                productElement.dataset.nombre = prod.nombre;
+
+                const proveedor = prod.proveedor_nombre || "No asignado";
+
+                productElement.innerHTML = `
+                    <div class="product-text">
+                        <h3>${capitalize(prod.nombre)}</h3>
+                        <p>
+                            Marca: ${prod.marca || 'N/A'}<br>
+                            Categoria: ${prod.categoria || 'N/A'}<br>
+                            Descripcion: ${prod.descripcion || 'N/A'}<br>
+                            Proveedor: ${proveedor}<br>
+                            Ubicación: ${prod.ubicacion || 'Sin ubicación'}<br>
+                            Stock: <span class="stock">${prod.stock}</span>
+                        </p>
+                    </div>
+                    <div class="product-actions">
+                        <div class="price">Venta: $${(prod.precio_venta !== undefined) ? parseFloat(prod.precio_venta).toFixed(2) : parseFloat(prod.precio || 0).toFixed(2)}</div>
+                        <div class="action-buttons">
+                            <button class="action-btn btn-editar" onclick="openEditForm(${prod.id})">Editar</button>
+                            <button class="action-btn btn-historial" onclick="showHistorial(${prod.id}, '${escapeJsString(prod.nombre)}')">Historial</button>
+                            <button class="action-btn btn-entrada" onclick="registrarEntrada(${prod.id})">Entrada (+)</button>
+                            <button class="action-btn btn-salida" onclick="registrarSalida(${prod.id})">Salida (-)</button>
+                            <button class="action-btn btn-eliminar" onclick="eliminarProducto(${prod.id})">Eliminar (X)</button>
+                        </div>
+                    </div>
+                `;
+                productList.appendChild(productElement);
+            });
+        }
+
+              // Crea la cuadrícula de productos en la sección "Catálogo"
+        function renderCatalogo(productos) {
+            const grid = document.getElementById("catalogoGrid");
+            grid.innerHTML = "";
+            if (!productos || productos.length === 0) {
+                grid.innerHTML = "<p style='text-align:center; color:#777;'>No hay productos en el catalogo.</p>";
+                return;
+            }
+
+            productos.forEach(prod => {
+                const card = document.createElement("div");
+                card.classList.add("card");
+
+                card.innerHTML = `
+                    <div>
+                        <h4>${capitalize(prod.nombre)}</h4>
+                        <p>${prod.descripcion || 'Sin descripcion'}</p>
+                        <div class="price">Venta: $${(prod.precio_venta !== undefined) ? parseFloat(prod.precio_venta).toFixed(2) : parseFloat(prod.precio || 0).toFixed(2)}</div>
+                        <p style="font-size:13px; margin-top:5px;">Ubicación: ${prod.ubicacion || 'N/A'}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Lista de proveedores
+        function renderProveedorList(proveedores) {
+            const ul = document.getElementById("proveedorList");
+            ul.innerHTML = "";
+            if (proveedores.length === 0) {
+                ul.innerHTML = "<li>No hay proveedores registrados.</li>";
+                return;
+            }
+            proveedores.forEach(p => {
+                const li = document.createElement("li");
+                li.textContent = p.nombre;
+                ul.appendChild(li);
+            });
+        }
+
+        // Cargar proveedor en dropdown
+        async function loadProveedoresDropdown() {
+            const proveedores = await getAPI('get_proveedores');
+            if (!proveedores) return;
+
+            proveedorCache = proveedores;
+
+            const selects = [document.getElementById("proveedor_n"), document.getElementById("proveedor")];
+            selects.forEach(select => {
+                select.innerHTML = '<option value="0">-- Seleccionar Proveedor --</option>';
+                proveedores.forEach(p => {
+                    const option = document.createElement("option");
+                    option.value = p.id;
+                    option.textContent = p.nombre;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // Capitalizar
+        function capitalize(str) {
+            if (!str) return str;
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function escapeJsString(str) {
+            if (!str) return '';
+            return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
+
+        // Mostrar secciones
+        async function showSection(id, element) {
+            document.querySelectorAll(".container").forEach(sec => sec.classList.add("hidden"));
+            document.getElementById(id).classList.remove("hidden");
+
+            document.querySelectorAll("nav a").forEach(a => a.classList.remove("active"));
+            if (element) element.classList.add("active");
+
+            if (id === 'inicio') {
+                const db = await getDatabase();
+                renderProductList(db);
+                checkLowStock(db);  // ⚠ NUEVA ALERTA DE STOCK BAJO
+                limpiarBusqueda();
+            }
+            if (id === 'catalogo') {
+                const productos = inventarioCache.length > 0 ? inventarioCache : await getDatabase();
+                renderCatalogo(productos);
+            }
+            if (id === 'nuevo' || id === 'edicion') {
+                if (proveedorCache.length === 0) await loadProveedoresDropdown();
+            }
+            if (id === 'proveedores') {
+                const proveedores = await getAPI('get_proveedores');
+                renderProveedorList(proveedores);
+            }
+            if (id === 'reportes') {
+                document.getElementById("report-results").innerHTML = "";
+            }
+        }
+
+        // Guardar nuevo producto
+        formNuevo.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const data = {
+                nombre: document.getElementById("nombre_n").value.trim(),
+                marca: document.getElementById("marca_n").value.trim(),
+                descripcion: document.getElementById("descripcion_n").value.trim(),
+                precio: parseFloat(document.getElementById("precio_n").value),
+                precio_venta: parseFloat(document.getElementById("precio_venta_n").value),
+                categoria: document.getElementById("categoria_n").value.trim(),
+                stock: parseInt(document.getElementById("stock_n").value),
+                ubicacion: document.getElementById("ubicacion_n").value.trim(),
+                proveedor_id: parseInt(document.getElementById("proveedor_n").value)
+            };
+
+            const result = await postAPI({
+                action: "create",
+                data: data
+            });
+
+            if (result && result.id) {
+                alert("Producto agregado exitosamente");
+                formNuevo.reset();
+                showSection('inicio');
+                getDatabase();
+            }
+        });
+
+        // Guardar edición
+        formEdicion.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = parseInt(editProductId.value);
+            const data = {
+                nombre: nombre.value.trim().toLowerCase(),
+                marca: marca.value.trim(),
+                descripcion: descripcion.value.trim(),
+                precio: parseFloat(precio.value),
+                precio_venta: parseFloat(precio_venta.value),
+                categoria: categoria.value.trim(),
+                ubicacion: ubicacion.value.trim(),
+                proveedor_id: parseInt(proveedor.value)
+            };
+
+            if (data.proveedor_id === 0) {
+                alert("Selecciona un proveedor.");
+                return;
+            }
+
+            const result = await postAPI({ action: 'update_producto', id, data });
+            if (result) {
+                alert("Producto actualizado.");
+                showSection('inicio', document.querySelector("nav a"));
+            }
+        });
+
+        // Cargar datos para editar
+        async function openEditForm(id) {
+            const producto = await getAPI('get_producto_details', { id });
+            if (!producto) return;
+
+            formEdicion.reset();
+
+            editProductId.value = producto.id;
+            nombre.value = producto.nombre;
+            marca.value = producto.marca;
+            descripcion.value = producto.descripcion;
+            precio.value = producto.precio;
+            precio_venta.value = producto.precio_venta;
+            categoria.value = producto.categoria;
+            ubicacion.value = producto.ubicacion;
+
+            if (proveedorCache.length === 0) await loadProveedoresDropdown();
+
+            setTimeout(() => {
+                proveedor.value = producto.proveedor_id || 0;
+            }, 100);
+
+            showSection('edicion');
+        }
+
+        // Buscar producto
+        function buscarProducto() {
+            const q = searchInput.value.toLowerCase();
+            const filtrados = inventarioCache.filter(p => p.nombre.toLowerCase().includes(q));
+            renderProductList(filtrados);
+        }
+
+        function limpiarBusqueda() {
+            searchInput.value = "";
+            renderProductList(inventarioCache);
+        }
+
+        // Entrada de stock
+        async function registrarEntrada(id) {
+            const cantidad = parseInt(prompt("Cantidad a ingresar:"));
+            if (!cantidad || cantidad <= 0) return;
+
+            const result = await postAPI({ action: 'update_stock', id, cantidad, tipo: 'entrada' });
+            if (result) {
+                alert("Stock actualizado.");
+                const db = await getDatabase();
+                renderProductList(db);
+            }
+        }
+
+        // Salida de stock
+        async function registrarSalida(id) {
+            const cantidad = parseInt(prompt("Cantidad a retirar:"));
+            if (!cantidad || cantidad <= 0) return;
+
+            const result = await postAPI({ action: 'update_stock', id, cantidad, tipo: 'salida' });
+            if (result) {
+                alert("Stock actualizado.");
+                const db = await getDatabase();
+                renderProductList(db);
+            }
+        }
+
+        // Eliminar
+        async function eliminarProducto(id) {
+            if (!confirm("¿Eliminar producto?")) return;
+
+            const result = await postAPI({ action: 'delete', id });
+            if (result) {
+                alert(result.message || "Producto eliminado.");
+                const db = await getDatabase();
+                renderProductList(db);
+            }
+        }
+
+        // Historial
+        async function showHistorial(id, nombre) {
+            const hist = await getAPI('get_historial', { id });
+            const cont = document.getElementById("historialModalContent");
+
+            historialModalTitulo.textContent = `Historial de: ${capitalize(nombre)}`;
+
+            if (!hist || hist.length === 0) {
+                cont.innerHTML = "<p>No hay movimientos registrados.</p>";
+                historialModal.style.display = "block";
+                return;
+            }
+
+            let table = "<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Cantidad</th></tr></thead><tbody>";
+            hist.forEach(h => {
+                const fecha = new Date(h.fecha).toLocaleString();
+                table += `<tr><td>${fecha}</td><td>${h.tipo}</td><td>${h.cantidad}</td></tr>`;
+            });
+            table += "</tbody></table>";
+
+            cont.innerHTML = table;
+            historialModal.style.display = "block";
+        }
+
+        function closeHistorialModal() {
+            historialModal.style.display = "none";
+        }
+
+        // Reportes
+        async function getReporteStockBajo() {
+            
+        }
+
+        // ===============================
+// REPORTES
+// ===============================
+
+// Reporte: Productos con Stock Bajo
+async function getReporteStockBajo() {
+    const data = await postAPI({ action: "report_stock_bajo" });
+    if (!data) return;
+
+    let html = `
+        <h3>Productos con Stock Bajo</h3>
+        <table border="1" cellpadding="8">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Stock</th>
+            </tr>
+    `;
+
+    data.forEach(p => {
+        html += `
+            <tr>
+                <td>${p.id}</td>
+                <td>${p.nombre}</td>
+                <td>${p.stock}</td>
+            </tr>
+        `;
+    });
+
+    html += "</table>";
+    document.getElementById("report-results").innerHTML = html;
+}
+
+
+// Reporte: Valor Total del Inventario
+async function getReporteValorTotal() {
+    const data = await postAPI({ action: "report_valor_total" });
+    if (!data) return;
+
+    document.getElementById("report-results").innerHTML = `
+        <h3>Valor Total del Inventario</h3>
+        <p style="font-size:20px; font-weight:bold;">
+            $${parseFloat(data.valor_total).toFixed(2)}
+        </p>
+    `;
+}
+
+
+// Reporte: Productos por Categoría
+async function getReportePorCategoria() {
+    const data = await postAPI({ action: "report_por_categoria" });
+    if (!data) return;
+
+    let html = `
+        <h3>Inventario por Categoría</h3>
+        <table border="1" cellpadding="8">
+            <tr>
+                <th>Categoría</th>
+                <th>N° Productos</th>
+                <th>Stock Total</th>
+            </tr>
+    `;
+
+    data.forEach(cat => {
+        html += `
+            <tr>
+                <td>${cat.categoria}</td>
+                <td>${cat.num_productos}</td>
+                <td>${cat.stock_total}</td>
+            </tr>
+        `;
+    });
+
+    html += "</table>";
+    document.getElementById("report-results").innerHTML = html;
+}
+
+
+        // Inicializar
+        document.addEventListener("DOMContentLoaded", () => {
+            showSection('inicio', document.querySelector("nav a"));
+            loadProveedoresDropdown();
+        });
+    </script>
+
+</body>
+</html>
